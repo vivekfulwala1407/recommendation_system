@@ -27,7 +27,6 @@ git clone https://github.com/vivekfulwala1407/recommendation_system.git
 cd recommendation_system
 python -m venv venv
 source venv/bin/activate
-cd myproject
 ```
 
 ### 2. Install Dependencies
