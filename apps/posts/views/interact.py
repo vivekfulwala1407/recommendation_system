@@ -1,58 +1,12 @@
 from rest_framework import generics, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.exceptions import PermissionDenied
-from .models import Post
-from .serializers import PostSerializer
-import os
-from django.conf import settings
-from .utils import build_personalized_feed
-from .utils_vit import save_metadata
+from ..models.post import Post
 from django.http import Http404
-from .models_mongo import PostMetadata
+from ..models.post_metadata import PostMetadata
 import logging
 
 logger = logging.getLogger(__name__)
-
-class PostCreateView(generics.CreateAPIView):
-    queryset = Post.objects.all()
-    serializer_class = PostSerializer
-    permission_classes = [IsAuthenticated]
-
-    def create(self, request, *args, **kwargs):
-        try:
-            serializer = self.get_serializer(data=request.data)
-            serializer.is_valid(raise_exception=True)
-            self.perform_create(serializer)
-            post = serializer.instance
-            data = serializer.data
-            if data.get('image'):
-                image_path = post.image.path
-                metadata = save_metadata(post, image_path)
-                data['tags'] = metadata['tags']
-                data['category'] = metadata['category']
-                if isinstance(data['image'], str) and data['image'].startswith(settings.MEDIA_URL):
-                    data['image'] = request.build_absolute_uri(data['image'])
-                else:
-                    data['image'] = request.build_absolute_uri(settings.MEDIA_URL + data['image'])
-            return Response(data, status=status.HTTP_201_CREATED)
-        except Exception as e:
-            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-    def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
-
-class FeedView(generics.ListAPIView):
-    serializer_class = PostSerializer
-    permission_classes = [IsAuthenticated]
-    
-    def get_queryset(self):
-        user = self.request.user
-        if hasattr(self, '_feed_cache'):
-            delattr(self, '_feed_cache')
-        feed = build_personalized_feed(user)
-        return feed
-
 class InteractView(generics.GenericAPIView):
     queryset = Post.objects.all()
     permission_classes = [IsAuthenticated]
@@ -115,30 +69,3 @@ class InteractView(generics.GenericAPIView):
         except Exception as e:
             logger.error(f"Error in InteractView: {str(e)}")
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-class PostListView(generics.ListAPIView):
-    queryset = Post.objects.all()
-    serializer_class = PostSerializer
-    permission_classes = [IsAuthenticated]
-
-class PostDetailView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Post.objects.all()
-    serializer_class = PostSerializer
-    permission_classes = [IsAuthenticated]
-    def get_object(self):
-        obj = super().get_object()
-        if obj.user != self.request.user and not self.request.user.is_superuser:
-            raise PermissionDenied("You can only access your own posts")
-        return obj
-    def destroy(self, request, *args, **kwargs):
-        instance = self.get_object()
-        if instance.image:
-            if os.path.isfile(instance.image.path):
-                os.remove(instance.image.path)
-        try:
-            PostMetadata.objects(post_id=instance.id).delete()
-            logger.info(f"Deleted metadata for post {instance.id}")
-        except Exception as e:
-            logger.error(f"Error deleting metadata: {str(e)}")
-        instance.delete()
-        return Response({'message': 'Post deleted successfully'}, status=status.HTTP_200_OK)

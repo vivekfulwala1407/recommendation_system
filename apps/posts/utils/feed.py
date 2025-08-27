@@ -1,6 +1,6 @@
-from .models import Post
+from ..models.post import Post
 from django.contrib.auth import get_user_model
-from .models_mongo import PostMetadata
+from ..models.post_metadata import PostMetadata
 import random
 import logging
 import nltk

@@ -1,5 +1,9 @@
 from django.urls import path
-from .views import PostCreateView, PostListView, PostDetailView, FeedView, InteractView
+from .views.feed import FeedView
+from .views.post_create import PostCreateView
+from .views.post_list import PostListView
+from .views.post_detail import PostDetailView
+from .views.interact import InteractView
 
 urlpatterns = [
     path('posts/', PostListView.as_view(), name='post_list'),

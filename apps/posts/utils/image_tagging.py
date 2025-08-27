@@ -1,11 +1,11 @@
 from transformers import ViTForImageClassification, ViTFeatureExtractor
 from PIL import Image
 import torch
-from .models_mongo import PostMetadata
+from ..models.post_metadata import PostMetadata
 import logging
 import nltk
 from nltk.corpus import wordnet as wn
-from .category import CATEGORY_MAPPINGS
+from ..category import CATEGORY_MAPPINGS
 
 nltk.download('wordnet')
 

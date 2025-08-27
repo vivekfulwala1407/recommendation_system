@@ -1,5 +1,8 @@
 from django.urls import path
-from .views import RegisterView, LoginView, ForgotPasswordView, ResetPasswordView
+from .views.register import RegisterView
+from .views.login import LoginView
+from .views.forgot_password import ForgotPasswordView
+from .views.reset_password import ResetPasswordView
 from rest_framework_simplejwt.views import TokenRefreshView
 
 urlpatterns = [

@@ -1,6 +1,6 @@
 from rest_framework import serializers
-from .models import Post
-from .models_mongo import PostMetadata
+from ..models.post import Post
+from ..models.post_metadata import PostMetadata
 
 class PostSerializer(serializers.ModelSerializer):
     category = serializers.SerializerMethodField()
